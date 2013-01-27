@@ -1,0 +1,30 @@
+{% extends "front/base.html" %}
+
+{% block style %}
+#content table { margin-left: 10px; }
+#content th { text-align: right; padding-right: 1em; }
+{% endblock %}
+
+{% block content %}
+<h1>Wind</h1>
+
+<ul>
+{% for server_registration in server_registrations %}
+	<li>
+		<h3>{{ server_registration.ip}}:{{ server_registration.port }}</h3>
+		<table>
+		{% for key, info in server_registration.fetch_pool_info.items %}
+			<tr>
+				<th>{{ key }}:</th>
+				<td>{{ info }}</td>
+			</tr>
+		{% endfor %}
+		</table>
+		
+	</li>
+{% empty %}
+	<li>No Registered Wind Servers!</li>
+{% endfor %}
+</ul>
+
+{% endblock %}
