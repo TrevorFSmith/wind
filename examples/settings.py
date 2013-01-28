@@ -14,12 +14,11 @@ MANAGERS = ADMINS
 PROJECT_ROOT = os.path.realpath(os.path.dirname(__file__))
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
 TEMPLATE_DIRS = os.path.join(PROJECT_ROOT, 'templates')
+STATICFILES_DIRS = (os.path.join(PROJECT_ROOT, 'static'), ) 
 
 MEDIA_URL = '/media/'
 STATIC_URL = '/static/'
 STATIC_ROOT = '/mnt/static/'
-
-STATICFILES_DIRS = (os.path.join(PROJECT_ROOT, 'static'), ) 
 
 STATICFILES_FINDERS = (
 	'django.contrib.staticfiles.finders.FileSystemFinder',

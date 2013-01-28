@@ -2,8 +2,13 @@ from django.contrib.sites.models import Site
 
 def site(request):
     """Adds context variables to every request"""
+    current_site = Site.objects.get_current()
+    host_name = current_site.domain
+    if ':' in host_name: host_name = host_name.split(':')[0]
+
     return {
-    	'site': Site.objects.get_current()
+    	'site': current_site,
+    	'host_name': host_name
     }
 
 # Copyright 2012 Trevor F. Smith (http://trevor.smith.name/) 

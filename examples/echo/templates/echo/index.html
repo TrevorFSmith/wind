@@ -3,9 +3,11 @@
 {% block script-extras-page %}
 <script>
 	$(document).ready(function(){
+		window.pageView = new echo.views.PageView({
+			'el':$('#page-view'),
+			'host':'{{host_name}}:9000'
+		});
+		window.pageView.render();
 	});
 </script>
-{% endblock %}
-{% block page-view %}
-Oi
 {% endblock %}
