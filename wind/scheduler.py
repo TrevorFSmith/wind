@@ -57,9 +57,9 @@ class Scheduler:
 
 def discover_classes(package_name, base_class):
 	"""Returns a list of classes in app.module_name which is a subclass of base_class"""
-	from settings import INSTALLED_APPS
+	from django.conf import settings
 	results = []
-	for app_module_name in INSTALLED_APPS:
+	for app_module_name in settings.INSTALLED_APPS:
 		try:
 			app = __import__(app_module_name)
 			__import__('%s.%s' % (app_module_name, package_name))

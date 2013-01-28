@@ -177,8 +177,8 @@ CHANNELS = [Channel('server_announcements', 'Messages from the Server')]
 
 def register_app_events():
 	"""Register all of the classes which subclass wind.events.Event in the installed apps' 'events' modules."""
-	from settings import INSTALLED_APPS
-	for app_module_name in INSTALLED_APPS:
+	from django.conf import settings
+	for app_module_name in settings.INSTALLED_APPS:
 		try:
 			app = __import__(app_module_name)
 			__import__('%s.events' % app_module_name)
