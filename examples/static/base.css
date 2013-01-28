@@ -1,0 +1,34 @@
+body {
+	font-family: Arial, sans-serif;
+	padding-bottom: 40px;
+	max-width: 980px;
+}
+
+form.model-form { max-width: 500px; }
+form.model-form button[type=submit] {
+	display: block;
+	float: right;
+}
+form.model-form input[type=text] { width: 100%; }
+label.model-form-label { margin-bottom: 0em; }
+label.model-form-boolean-label:before { content: "\a"; white-space: pre; }
+label.model-form-boolean-label {
+	display: inline;
+	margin-right: 0.5em;
+}
+
+.inline-block {
+	display: inline-block;
+	vertical-align: top;
+}
+
+@media (min-width: 980px) {
+	#top-bar nav {
+		text-align: right;
+	}
+}
+@media (max-width: 980px) {
+	#top-bar nav {
+		text-align: left;
+	}
+}

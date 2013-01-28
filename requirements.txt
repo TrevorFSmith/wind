@@ -1,0 +1,7 @@
+
+django>=1.4
+gunicorn
+django-piston
+simplejson
+
+-e git+git://github.com/TrevorFSmith/wind.git#egg=wind
