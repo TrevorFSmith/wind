@@ -27,10 +27,11 @@
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			  </a>
-			  <a class="brand" href="/">{{ site.name }}</a>
+			  <a class="brand" href="{% url front.views.index %}">{{ site.name }}</a>
 			  <div class="nav-collapse">
 				<ul class="nav">
-					<li><a href="{% url echo.views.index %}" class="index-nav">Echo</a></li>
+					<li><a href="{% url echo.views.index %}" class="echo-nav">Echo</a></li>
+					<li><a href="{% url wind.views.index %}" class="wind-nav">Wind</a></li>
 					{% if request.user.is_staff %}
 						<li><a href="{% url admin:index %}">Admin</a></li>
 					{% endif %}

@@ -10,6 +10,8 @@ ADMINS = (
 )
 MANAGERS = ADMINS
 
+WEB_SOCKETS_PORT = 9000
+
 # These are reasonable defaults for running these examples
 PROJECT_ROOT = os.path.realpath(os.path.dirname(__file__))
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
@@ -79,9 +81,9 @@ INSTALLED_APPS = (
 	'django.contrib.staticfiles',
 	'django.contrib.admin',
 	'django.contrib.admindocs',
-	'south',
 	'gunicorn',
 	'wind',
+	'examples.front',
 	'examples.echo',
 )
 
