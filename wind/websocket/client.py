@@ -10,8 +10,12 @@ import struct
 import hashlib
 import Queue
 
-from server import CRLF, DOUBLE_CRLF, START_BYTE, END_BYTE
 from gevent import WebSocketFrame
+
+CRLF = '\x0D\x0A'
+DOUBLE_CRLF = CRLF+CRLF
+START_BYTE = '\x00'
+END_BYTE = '\xff'
 
 def parse_request_header(header):
 	"""Breaks up the header lines of the WebSocket request into a dictionary"""
