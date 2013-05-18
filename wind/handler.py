@@ -1,8 +1,8 @@
+import json
 import traceback
 from types import *
-import simplejson
 
-from django.conf.urls.defaults import *
+from django.conf.urls import *
 from django.http import HttpRequest
 from django.db.models.query import QuerySet
 
@@ -25,7 +25,7 @@ def to_json(data):
 
 def from_json(obj, json_data):
 	"""Takes all of the top level attributes from the json and tries to set them as attributes on the obj"""
-	parsed_data = simplejson.loads(json_data)
+	parsed_data = json.loads(json_data)
 	for key, val in parsed_data.items(): setattr(obj, key, val)
 	return obj
 

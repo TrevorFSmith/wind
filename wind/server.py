@@ -1,21 +1,17 @@
-"""THIS IS NOT THREAD SAFE AND SHOULD ONLY BE HANDLED IN THE ASYNCORE LOOP"""
+import os
 import sys
 import Queue
-import socket
+import signal
+import gevent
 import traceback
-import threading
-import time, datetime
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AnonymousUser
 
 import events
-from websocket.server import WebSocketServer
-
 from handler import to_json
 from models import ServerRegistration, SessionKey
-from scheduler import discover_tasks, Scheduler
 
 AUTHENTICATED_ACTION = 'ws_authentication'
 JOINED_CHANNEL_ACTION = 'ws_joined_channel'
@@ -31,10 +27,16 @@ class WebSocketConnection:
 		self.channel = None
 		self.disconnected = False
 
+	def start_handling(self):
+		while True:
+			frame_data = self.handler.receive()
+			if frame_data is None: break
+			self.handle_incoming_frame(frame_data)
+
 	def send_event(self, event): self.handler.send_frame(event.to_json())
 
 	def handle_incoming_frame(self, frame_data):
-		#print 'Incoming: %s' % repr(frame_data)
+		print 'Incoming: %s' % repr(frame_data)
 		event = events.parse_event_json(frame_data)
 		if not event:
 			print "Could not read an event from the data: %s" % frame_data
@@ -44,6 +46,7 @@ class WebSocketConnection:
 		if isinstance(event, events.Heartbeat):
 			pass # ignore for now, eventually maybe track dead connections?
 		elif isinstance(event, events.AuthenticationRequest):
+			print 'session id', event.session_id
 			if event.session_id == settings.WEB_SOCKETS_SECRET:
 				self.user = User.objects.filter(is_staff=True)[0]
 				response_event = events.AuthenticationResponse(True, self.user.username)
@@ -137,11 +140,12 @@ class WebSocketConnection:
 			print "Received unhandled event %s" % event.to_json()
 
 		if response_event:
-			#print 'Outgoing: %s' % repr(to_json(response_event))
-			self.handler.send_frame(response_event.to_json())
+			print 'Outgoing: %s' % repr(to_json(response_event))
+			self.handler.send(response_event.to_json())
 
 	def user_from_session_key(self, session_key):
 		"""Returns a User object if it is associated with a session key, otherwise None"""
+		print 'filtering on', session_key, SessionKey.objects.filter(key=session_key)
 		if SessionKey.objects.filter(key=session_key).count() == 0: return AnonymousUser()
 		return SessionKey.objects.get(key=session_key).user
 			
@@ -155,80 +159,34 @@ class WebSocketConnection:
 	def __unicode__(self):
 		return "Connection: %s user: %s channel: %s" % (self.client_address, self.user, self.channel.channel_id)	
 
-class Server:
+
+class WebsocketWSGIApp(object):
 	"""The handler of WebSockets based communications."""
 	def __init__(self):
-		self.ws_server = WebSocketServer('0.0.0.0', settings.WEB_SOCKETS_PORT, self.frame_callback, handler_closed_callback=self.handler_closed_callback)
 		self.ws_connections = []
-
 		self.registration = None
-		
 		self.channels = {} # map of channel_id to channel
 		events.register_app_events()
 		for channel in events.CHANNELS: self.channels[channel.channel_id] = channel
 
-		self.scheduler = Scheduler()
-		for task in discover_tasks(): self.scheduler.add_task(task())
-
-	def frame_callback(self, handler, frame_data):
-		connection = self.get_or_create_connection(handler)
-		try:
-			connection.handle_incoming_frame(frame_data)
-		except:
-			traceback.print_exc()
-			connection.finish()
-
-	def handler_closed_callback(self, handler):
-		for connection in self.ws_connections:
-			if connection.handler == handler:
-				connection.finish()
-				return
-		print 'unknown closed handler', handler
-		
-	def start(self, run_scheduler=True, run_websocket_server=True):
-		if run_scheduler: self.scheduler.start_all_tasks()
-		if run_websocket_server: self.ws_server.start()
-		
-		for registration in ServerRegistration.objects.all(): registration.delete()
-		self.registration, created = ServerRegistration.objects.get_or_create(ip=socket.gethostbyname(socket.gethostname()), port=self.ws_server.port)
-
-	def stop(self):
-		self.scheduler.stop_all_tasks()
-		if self.registration:
-			try:
-				self.registration.delete()
-			except:
-				traceback.print_exc()
-
-		self.ws_server.stop()
-		
-		for con in self.ws_connections:
-			try:
-				con.handler.close()
-			except:
-				traceback.print_exc()
+		#for registration in ServerRegistration.objects.all(): registration.delete()
+		#self.registration, created = ServerRegistration.objects.get_or_create(ip=socket.gethostbyname(socket.gethostname()), port=self.ws_server.port)
 
 	def send_event(self, channel_id, event):
-		for connection in self.get_client_connections(channel_id): connection.send_event(event)
+		for connection in self.get_connections(channel_id): connection.send_event(event)
 
-	def get_or_create_connection(self, handler):
-		for connection in self.ws_connections:
-			if connection.handler == handler: return connection
-		connection = WebSocketConnection(self, handler)
-		self.ws_connections.append(connection)
-		return connection
+	def get_connections(self, channel_id):
+		return [connection for connection in self.ws_connections if connection.channel and connection.channel.channel_id == channel_id]
 
-	def get_subscribed_users(self, channel_id):
-		users = []
-		for connection in self.get_client_connections(channel_id):
-			if connection.user != None and connection.user not in users: users.append(connection.user)
-		return users
+	def cleanup(self):
+		if self.registration: self.registration.delete()
 
-	def get_client_connections(self, channel_id):
-		#TODO keep a hashmap of channel_id:connection[] for faster access
-		cons = []
-		for connection in self.ws_connections:
-			if connection.channel and connection.channel.channel_id == channel_id: cons.append(connection)
-		return cons
+	def handle(self, ws):
+		ws_connection = WebSocketConnection(self, ws)
+		self.ws_connections.append(ws_connection)
+		ws_connection.start_handling()
 
-# Copyright 2010,2011,2012 Trevor F. Smith (http://trevor.smith.name/) Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+	def __call__(self, environ, start_response):
+		self.handle(environ["wsgi.websocket"])
+
+# Copyright 2013 Trevor F. Smith (http://trevor.smith.name/) Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

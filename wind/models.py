@@ -24,7 +24,6 @@ from django.utils.encoding import force_unicode
 from django.template.loader import render_to_string
 
 from handler import to_json
-from client import Client, EventHandler
 
 def generate_key():
 	key = uuid.uuid4().hex

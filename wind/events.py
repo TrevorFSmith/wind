@@ -1,8 +1,8 @@
 """
 The hydration code assumes that these event objects have only string attributes and has a no-param __init__.
 """
+import json
 import Queue
-import simplejson
 import types, traceback, sys
 from datetime import datetime
 
@@ -208,7 +208,7 @@ class EventHandler:
 
 def parse_event_json(json_string):
 	try:
-		json_data = simplejson.loads(json_string)
+		json_data = json.loads(json_string)
 	except:
 		print 'failed to parse json: %s' % len(json_string), json_string
 		raise

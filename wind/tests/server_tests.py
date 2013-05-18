@@ -77,7 +77,7 @@ class ServerTest(TransactionTestCase):
 		self.client2 = Client()
 		self.client3 = Client()
 		self.server = Server()
-		self.server.start(run_scheduler=False)
+		self.server.start()
 		self.assertTrue(TestRegistrationEvent in EVENTS)
 
 	def tearDown(self):

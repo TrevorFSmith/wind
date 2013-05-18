@@ -1,5 +1,5 @@
 
-window['Wind'] = {};
+var Wind = window.Wind || {};
 
 Wind.WebSocketsPort = {{ web_sockets_port }};
 Wind.ServerAnnouncementsChannelID = 'server_announcements';
@@ -92,11 +92,11 @@ Wind.Client = function() {
 	self.heartbeatFrequency = 55000;
 	
 	// set these to receive callbacks on various events
-	self.open_handler = function() {}
-	self.close_handler = function(){}
-	self.authentication_handler = function(successful) {}
-	self.subscription_handler = function(channel_id, subscribed, is_member, is_admin, is_editor) {}
-	self.app_event_handler = function(event){ console.log("An unhandled event: ", message); }
+	self.openHandler = function() {}
+	self.closeHandler = function(){}
+	self.authenticationHandler = function(successful) {}
+	self.subscriptionHandler = function(channel_id, subscribed, is_member, is_admin, is_editor) {}
+	self.appEventHandler = function(event){ console.log("An unhandled event: ", message); }
 
 	self.handle_message = function(message) {
 		var event = Wind.Events.rehydrateEvent(JSON.parse(message));
@@ -110,14 +110,14 @@ Wind.Client = function() {
 					self.username = null;
 				}
 				self.finished_auth = true;
-				self.authentication_handler(self.username != null);
+				self.authenticationHandler(self.username != null);
 				break;
 			case 'SubscribeResponse':
 				if(event.joined) self.channelID = event.channel_id;
-				self.subscription_handler(event.channel_id, event.joined, event.is_member, event.is_admin, event.is_editor);
+				self.subscriptionHandler(event.channel_id, event.joined, event.is_member, event.is_admin, event.is_editor);
 				break;
 			default:
-				self.app_event_handler(event);
+				self.appEventHandler(event);
 		}
 	}
 
@@ -134,11 +134,7 @@ Wind.Client = function() {
 	}
 
 	self.authenticate = function() {
-		if(!window.windSessionKey){
-			console.log("No wind session key");
-			return false;
-		}
-		self.sendEvent(new Wind.Events.AuthenticationRequest(window.windSessionKey));
+		self.sendEvent(new Wind.Events.AuthenticationRequest(Wind.getCookie('sessionid')));
 		return true;
 	}
 	
@@ -158,14 +154,14 @@ Wind.Client = function() {
 	
 	self.__open = function(){
 		if(self.heartbeatTime == null) self.heartbeatTimeout = setTimeout(function(){ self.sendHeartbeat(); }, self.heartbeatFrequency);
-		self.open_handler();
+		self.openHandler();
 	}
 	self.__close = function(){
 		if(self.heartbeatTimeout != null){
 			clearTimeout(self.heartbeatTimeout);
 			self.heartbeatTimeout = null;
 		}
-		self.close_handler();
+		self.closeHandler();
 	}
 	
 }
@@ -193,3 +189,18 @@ Wind.parseLocationParameters = function(){
 
 Wind.locationParameters = Wind.parseLocationParameters();
 
+Wind.getCookie = function(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+};

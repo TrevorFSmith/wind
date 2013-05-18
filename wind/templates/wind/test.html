@@ -1,42 +1,40 @@
-{% extends "front/base.html" %}
+{% extends "base.html" %}
 
-{% block sub-head %}
-<script src="{% url wind.views.windjs %}"></script>
+{% block script-extras-page %}
+	<script src="{% url 'wind.views.windjs' %}"></script>
 
-<script>
-var windClient = null;
-$(document).ready(function(){
-	console.log('testing');
-	windClient = new Wind.Client();
-	windClient.open_handler = function(){ windClient.authenticate(); };
-	windClient.close_handler = function(){
-		console.log("Wind Client Closed");
-	}
-	windClient.authentication_handler = function(success){
-		if(success){
-			console.log('Authenticated');
-		} else {
-			console.log('Did not authenticate');
+	<script>
+	var windClient = null;
+	$(document).ready(function(){
+		windClient = new Wind.Client();
+		windClient.openHandler = function(){ 
+			windClient.authenticate(); 
+		};
+		windClient.closeHandler = function(){
+			console.log("Wind Client Closed");
 		}
-	};
-	windClient.app_event_handler = appEventHandler;
-	windClient.open();
-});
+		windClient.authenticationHandler = function(success){
+			if(success){
+				console.log('Authenticated');
+			} else {
+				console.log('Did not authenticate');
+			}
+		};
+		windClient.appEventHandler = appEventHandler;
+		windClient.open();
+	});
 
-function appEventHandler(event){
-	switch(event.type) {
-		case 'SomeEventType':
-			break;
-		default:
-			console.log("Unhandled event", event);
+	function appEventHandler(event){
+		switch(event.type) {
+			case 'SomeEventType':
+				break;
+			default:
+				console.log("Unhandled event", event);
+		}
 	}
-}
-</script>
+	</script>
 {% endblock %}
 
-{% block sub-style %}
-{% endblock %}
-
-{% block content %}
-<h1>Test Wind</h1>
+{% block page-view %}
+	<h1>Test Wind</h1>
 {% endblock %}
