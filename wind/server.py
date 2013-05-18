@@ -2,6 +2,7 @@ import os
 import sys
 import Queue
 import signal
+import socket
 import gevent
 import traceback
 
@@ -46,7 +47,6 @@ class WebSocketConnection:
 		if isinstance(event, events.Heartbeat):
 			pass # ignore for now, eventually maybe track dead connections?
 		elif isinstance(event, events.AuthenticationRequest):
-			print 'session id', event.session_id
 			if event.session_id == settings.WEB_SOCKETS_SECRET:
 				self.user = User.objects.filter(is_staff=True)[0]
 				response_event = events.AuthenticationResponse(True, self.user.username)
@@ -56,7 +56,6 @@ class WebSocketConnection:
 					self.user = user
 					response_event = events.AuthenticationResponse(True, user.username)
 				else:
-					print "Auth failure with session id %s" % event.session_id
 					response_event = events.AuthenticationResponse(False)
 		elif isinstance(event, events.ServerInfoRequest):
 			if not self.user:
@@ -71,7 +70,10 @@ class WebSocketConnection:
 				
 		elif isinstance(event, events.ChannelListRequest):
 			if self.user:
-				response_event = events.ChannelList([channel for channel in self.server.channels])
+				channel_list = []
+				for channel_id, channel in self.server.channels.items():
+					channel_list.append([channel.channel_id, channel.name])
+				response_event = events.ChannelList(channel_list)
 			else:
 				print 'Attempted unauthed channel list request'
 				
@@ -99,7 +101,7 @@ class WebSocketConnection:
 						self.server.channels[channel.channel_id] = channel
 						response_event = events.ChannelCreated(channel.channel_id)
 				else:
-					response_event = events.ChannelExists(channel.channel_id)
+					response_event = events.ChannelExists(event.channel_id)
 					print 'already have that key', event.channel_id
 			else:
 				print 'Attempted unauthed channel list request'
@@ -145,7 +147,6 @@ class WebSocketConnection:
 
 	def user_from_session_key(self, session_key):
 		"""Returns a User object if it is associated with a session key, otherwise None"""
-		print 'filtering on', session_key, SessionKey.objects.filter(key=session_key)
 		if SessionKey.objects.filter(key=session_key).count() == 0: return AnonymousUser()
 		return SessionKey.objects.get(key=session_key).user
 			
@@ -162,15 +163,15 @@ class WebSocketConnection:
 
 class WebsocketWSGIApp(object):
 	"""The handler of WebSockets based communications."""
-	def __init__(self):
+	def __init__(self, port=9000):
 		self.ws_connections = []
 		self.registration = None
 		self.channels = {} # map of channel_id to channel
 		events.register_app_events()
 		for channel in events.CHANNELS: self.channels[channel.channel_id] = channel
 
-		#for registration in ServerRegistration.objects.all(): registration.delete()
-		#self.registration, created = ServerRegistration.objects.get_or_create(ip=socket.gethostbyname(socket.gethostname()), port=self.ws_server.port)
+		for registration in ServerRegistration.objects.all(): registration.delete()
+		self.registration, created = ServerRegistration.objects.get_or_create(ip=socket.gethostbyname(socket.gethostname()), port=port)
 
 	def send_event(self, channel_id, event):
 		for connection in self.get_connections(channel_id): connection.send_event(event)

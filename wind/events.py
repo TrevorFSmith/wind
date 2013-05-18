@@ -43,7 +43,7 @@ class ServiceException(Exception):
 
 class Event(object):
 	"""
-	The base class which all simulation events extend.
+	The base class which all events extend.
 	Server side events may implement the service(self, connection) method
 	"""
 	def from_json(self, json_string):
@@ -173,7 +173,7 @@ class EchoResponse(Event):
 		self.message = message
 
 EVENTS = [Heartbeat, AuthenticationRequest, AuthenticationResponse, SubscribeRequest, SubscribeResponse, ServerInfoRequest, ServerInfo, ChannelListRequest, ChannelList, CreateChannelRequest, ChannelCreated, DeleteChannelRequest, ChannelDeleted, EchoRequest, EchoResponse]
-CHANNELS = [Channel('server_announcements', 'Messages from the Server')]
+CHANNELS = [Channel(None, 'server_announcements', 'Messages from the Server')]
 
 def register_app_events():
 	"""Register all of the classes which subclass wind.events.Event in the installed apps' 'events' modules."""

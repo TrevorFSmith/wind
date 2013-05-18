@@ -139,6 +139,10 @@ Wind.Client = function() {
 		return true;
 	}
 	
+	self.createChannel = function(className, channelID){
+		self.sendEvent(new Wind.Events.CreateChannelRequest(className, channelID));
+	}
+
 	self.subscribe = function(channelID){
 		self.sendEvent(new Wind.Events.SubscribeRequest(channelID));
 	}
@@ -164,18 +168,6 @@ Wind.Client = function() {
 		}
 		self.closeHandler();
 	}
-	
-}
-
-Wind.escapeHTML = function(xml){
-	if(xml == null || xml.length == 0){
-		return xml;
-	}
-    return xml.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
-}
-
-Wind.unescapeHTML = function(xml){
-    return xml.replace(/&apos;/g,"'").replace(/&quot;/g,"\"").replace(/&gt;/g,">").replace(/&lt;/g,"<").replace(/&amp;/g,"&");
 }
 
 // sets up all the url parameters in a dictionary

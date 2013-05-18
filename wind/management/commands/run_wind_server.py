@@ -18,7 +18,8 @@ class Command(BaseCommand):
 
 	def handle(self, *labels, **options):
 		#gevent.signal(signal.SIGQUIT, gevent.shutdown)
-		server = pywsgi.WSGIServer(("", 9000), WebsocketWSGIApp(), handler_class=WebSocketHandler)
+		port = 9000
+		server = pywsgi.WSGIServer(("", port), WebsocketWSGIApp(port=port), handler_class=WebSocketHandler)
 		try:
 			server.serve_forever()
 		except KeyboardInterrupt:
