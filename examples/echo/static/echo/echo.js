@@ -17,14 +17,14 @@ echo.views.PageView = Backbone.View.extend({
 	},
 
 	open: function(){
-		try {
-			this.socket = new WebSocket("ws://" + this.options.host + "/echo");
-		} catch (e) {
-			this.socket = new MozWebSocket("ws://" + this.options.host + "/echo");
-		}
+		this.socket = new WebSocket("ws://" + this.options.host + "/echo");
 		this.socket.onopen = this.onOpen;
 		this.socket.onmessage = this.onMessage;
+		this.socket.onerror = function(){
+			console.log("Error", arguments);
+		}
 		this.socket.onclose = this.onClose;
+		console.log(this.socket);
 	},
 
 	onOpen: function(){

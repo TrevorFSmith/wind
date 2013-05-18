@@ -11,6 +11,8 @@ ADMINS = (
 MANAGERS = ADMINS
 
 WEB_SOCKETS_PORT = 9000
+WEB_SOCKETS_SECRET = '1234-4321'
+SESSION_COOKIE_HTTPONLY = False
 
 # These are reasonable defaults for running these examples
 PROJECT_ROOT = os.path.realpath(os.path.dirname(__file__))
