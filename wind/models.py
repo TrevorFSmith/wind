@@ -100,7 +100,7 @@ class ServerRegistration(models.Model):
 			traceback.print_exc()
 			return []
 
-def key_from_user(user): return SessionKey.objects.get(user=user).key
+def key_from_user(user): return SessionKey.objects.get_or_create(user=user)[0].key
 User.session_key = property(key_from_user)
 
 def create_session_key(sender, instance, created, **kwargs):

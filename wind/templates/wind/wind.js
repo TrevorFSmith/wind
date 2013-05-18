@@ -2,6 +2,7 @@
 var Wind = window.Wind || {};
 
 Wind.WebSocketsPort = {{ web_sockets_port }};
+Wind.SessionKey = "{{ windSessionKey }}";
 Wind.ServerAnnouncementsChannelID = 'server_announcements';
 
 Wind.stringify = function(hydrateObj){
@@ -134,7 +135,7 @@ Wind.Client = function() {
 	}
 
 	self.authenticate = function() {
-		self.sendEvent(new Wind.Events.AuthenticationRequest(Wind.getCookie('sessionid')));
+		self.sendEvent(new Wind.Events.AuthenticationRequest(Wind.SessionKey));
 		return true;
 	}
 	
