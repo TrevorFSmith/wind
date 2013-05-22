@@ -166,7 +166,7 @@ class EchoRequest(Event):
 
 	def service(self, connection):
 		if not connection.channel: raise ServiceException("Must be subscribed to a channel in order to echo")
-		connection.server.send_event(connection.channel.channel_id, EchoResponse(self.message))
+		connection.send_event(EchoResponse(self.message))
 
 class EchoResponse(Event):
 	def __init__(self, message=None):
@@ -209,6 +209,7 @@ class EventHandler:
 def parse_event_json(json_string):
 	try:
 		json_data = json.loads(json_string)
+		if not 'type' in json_data: raise Exception('No type in JSON');
 	except:
 		print 'failed to parse json: %s' % len(json_string), json_string
 		raise

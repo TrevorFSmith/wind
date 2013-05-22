@@ -25,10 +25,11 @@ Wind.Events.{{ event.event_name }} = function({% for attr in event.dict %}_{{ at
 	{% endfor %}
 	self.toJSON = function(){ return Wind.stringify(self); }
 }
+Wind.Events.{{ event.event_name }}.prototype.name = '{{ event.event_name }}';
 {% endfor %}
 
 Wind.Events.rehydrateEvent = function(jsonData){
-	event_func = null;
+	var event_func = null;
 	for(var key in Wind.Events){
 		if(key == jsonData['type']){
 			event_func = Wind.Events[key];
@@ -97,7 +98,7 @@ Wind.Client = function() {
 	self.closeHandler = function(){}
 	self.authenticationHandler = function(successful) {}
 	self.subscriptionHandler = function(channel_id, subscribed, is_member, is_admin, is_editor) {}
-	self.appEventHandler = function(event){ console.log("An unhandled event: ", message); }
+	self.appEventHandler = function(event){ console.log("An unhandled event: ", event); }
 
 	self.handle_message = function(message) {
 		var event = Wind.Events.rehydrateEvent(JSON.parse(message));

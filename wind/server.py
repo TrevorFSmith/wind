@@ -33,8 +33,9 @@ class WebSocketConnection:
 			frame_data = self.handler.receive()
 			if frame_data is None: break
 			self.handle_incoming_frame(frame_data)
+		self.finish()
 
-	def send_event(self, event): self.handler.send_frame(event.to_json())
+	def send_event(self, event): self.handler.send(event.to_json())
 
 	def handle_incoming_frame(self, frame_data):
 		print 'Incoming: %s' % repr(frame_data)

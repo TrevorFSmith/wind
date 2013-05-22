@@ -1,48 +1,117 @@
 {% extends "base.html" %}
 
 {% block script-extras-page %}
+	<link rel="stylesheet" href="{{STATIC_URL}}jquery-ui-1.9.2/development-bundle/external/qunit.css">
+	<script src="{{STATIC_URL}}jquery-ui-1.9.2/development-bundle/external/qunit.js"></script>
 	<script src="{% url 'wind.views.windjs' %}"></script>
-
 	<script>
-	var windClient = null;
-	$(document).ready(function(){
-		windClient = new Wind.Client();
-		windClient.openHandler = handleOpen;
-		windClient.closeHandler = handleClose;
-		windClient.authenticationHandler = handleAuthentication;
-		windClient.subscriptionHandler = handleSubscription;
-		windClient.appEventHandler = appEventHandler;
-		windClient.open();
-	});
+		module('Connection tests');
+		asyncTest('Open and close', function(){
+			var windClient = new Wind.Client();
+			windClient.openHandler = handleOpen;
+			windClient.closeHandler = handleClose;
+			windClient.authenticationHandler = handleAuthentication;
+			windClient.subscriptionHandler = handleSubscription;
+			windClient.appEventHandler = appEventHandler;
+			windClient.open();
 
-	function handleOpen(){ windClient.authenticate(); }
+			function handleOpen(){
+				windClient.authenticate();
+			}
 
-	function handleAuthentication(success){
-		if(!success){
-			console.log('Could not authenticate');
-			return;
+			var readyForClose = false;
+			function handleClose(){
+				ok(readyForClose, "Closed at the appropriate time.");
+				start();
+			}
+
+			function handleAuthentication(success){
+				ok(success, 'Authenticated');
+				windClient.createChannel(null, 'test_channel');
+				windClient.subscribe('test_channel');
+			};
+
+			function handleSubscription(channel_id, joined, is_member, is_admin, is_editor){
+				ok(joined, 'Joined channel ' + channel_id);
+				readyForClose = true;
+				windClient.close();
+			}
+
+			function appEventHandler(event){
+				switch(event.type) {
+					case 'ChannelExists':
+					case 'ChannelCreated':
+						break;
+					default:
+						console.log("Unhandled event", event);
+				}
+			}
+		});
+
+		asyncTest('Messaging', function(){
+			var windClient = null;
+			function messagingCallback(client){
+				ok(client, 'Received a wind client: ' + windClient);
+				var windClient = client;
+				windClient.appEventHandler = appEventHandler;
+				windClient.sendEvent(new Wind.Events.EchoRequest('Foo'));
+			}
+			function appEventHandler(event){
+				switch(event.type){
+					case Wind.Events.EchoResponse.prototype.name:
+						ok(event, 'Received echo response');
+						start();
+						break;
+					default:
+						console.log('Unhandled event', event);
+				}
+			}
+			createAndSubscribe('test_messaging', messagingCallback, true);
+		});
+
+		function createAndSubscribe(channelId, callback, createChannel){
+			// Creates a Wind.Client, opens a connection, and attempts to subscribe to a channel
+			var windClient = new Wind.Client();
+
+			windClient.openHandler = function() {
+				windClient.authenticate();
+			};
+
+			windClient.closeHandler = function(){
+				ok(false, 'Should not have closed.');
+			}			
+
+			windClient.appEventHandler = function(event){
+				switch(event.type) {
+					case 'ChannelExists':
+					case 'ChannelCreated':
+						break;
+					default:
+						console.log("Unhandled event", event);
+				}
+			}
+
+			windClient.authenticationHandler = function(success){
+				ok(success, 'Authenticated');
+				if(createChannel){
+					windClient.createChannel(null, channelId);
+				}
+				windClient.subscribe(channelId);
+			};
+
+			windClient.subscriptionHandler = function(channel_id, joined, is_member, is_admin, is_editor){
+				ok(joined, 'Joined channel ' + channel_id);
+				windClient.closeHandler = function(){ console.log('Closed')};
+				windClient.appEventHandler = function(){ console.log("Unhandled event", event); }
+				callback(windClient);
+			};
+			windClient.open();
 		}
-		windClient.createChannel(null, 'test_channel');
-		windClient.subscribe('test_channel');
-	};
-
-	function handleSubscription(channel_id, joined, is_member, is_admin, is_editor){
-		console.log('Subscription response:', arguments);
-	}
-
-	function appEventHandler(event){
-		switch(event.type) {
-			case 'SomeEventType':
-				break;
-			default:
-				console.log("Unhandled event", event);
-		}
-	}
-
-	function handleClose(){ console.log("Wind Client Closed"); }
 	</script>
 {% endblock %}
 
 {% block page-view %}
 	<h1>Test Wind</h1>
+	<div id="qunit"></div>
+	<div id="qunit-fixture" />
 {% endblock %}
