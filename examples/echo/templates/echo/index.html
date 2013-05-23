@@ -1,13 +1,15 @@
 {% extends "echo/base.html" %}
 
 {% block script-extras-page %}
+<script src='{% url "wind.views.windjs" %}'></script>
 <script>
+	window.sessionKey = '{{request.user.session_key}}';
+
 	$(document).ready(function(){
 		window.pageView = new echo.views.PageView({
 			'el':$('#page-view'),
-			'host':'127.0.0.1:9000'
+			'sessionKey':window.sessionKey
 		});
-		window.pageView.render();
 	});
 </script>
 {% endblock %}
