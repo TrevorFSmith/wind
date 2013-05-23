@@ -34,7 +34,16 @@ def index(request): return render_to_response('wind/index.html', { 'server_regis
 
 def test(request):
 	if not settings.DEBUG: raise Http404
-	return render_to_response('wind/test.html', { }, context_instance=RequestContext(request))
+	alice, created = User.objects.get_or_create(username='alice', is_staff=True)
+	if created: alice.set_password('1234')
+	bob, created = User.objects.get_or_create(username='bob')
+	if created: bob.set_password('1234')
+
+	context = {
+		'alice': alice,
+		'bob': bob
+	}
+	return render_to_response('wind/test.html', context, context_instance=RequestContext(request))
 
 def windjs(request):
 	from wind.events import EVENTS

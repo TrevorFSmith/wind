@@ -35,7 +35,9 @@ class WebSocketConnection:
 			self.handle_incoming_frame(frame_data)
 		self.finish()
 
-	def send_event(self, event): self.handler.send(event.to_json())
+	def send_event(self, event):
+		print 'Outgoing: %s' % repr(to_json(event))
+		self.handler.send(event.to_json())
 
 	def handle_incoming_frame(self, frame_data):
 		print 'Incoming: %s' % repr(frame_data)
@@ -79,7 +81,7 @@ class WebSocketConnection:
 				print 'Attempted unauthed channel list request'
 				
 		elif isinstance(event, events.CreateChannelRequest):
-			if self.user:
+			if self.user and self.user.is_staff:
 				# TODO fix this massive race condition
 				if not self.server.channels.has_key(event.channel_id):
 					if event.class_name:

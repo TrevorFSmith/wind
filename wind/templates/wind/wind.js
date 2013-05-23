@@ -84,9 +84,9 @@ Wind.WebSocketClient = function(_ws_port, _ws_host, _message_handler_function){
 	}
 }
 
-Wind.Client = function() {
+Wind.Client = function(sessionKey) {
 	var self = this;
-	
+	self.sessionKey = sessionKey;
 	self.username = null;
 	self.channelID = null;
 	self.finished_auth = false;
@@ -136,7 +136,7 @@ Wind.Client = function() {
 	}
 
 	self.authenticate = function() {
-		self.sendEvent(new Wind.Events.AuthenticationRequest(Wind.SessionKey));
+		self.sendEvent(new Wind.Events.AuthenticationRequest(self.sessionKey));
 		return true;
 	}
 	
