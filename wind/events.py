@@ -160,6 +160,18 @@ class TestRegistrationEvent(Event):
 	"""
 	pass
 
+class TestChannel(Channel):
+	def __init__(self, channel_id, name=None, options=None):
+		super(TestChannel, self).__init__(channel_id, name, options)
+
+	def handle_subscribe_request(self, connection, event):
+		if connection.user.username == 'bob':
+			return (False, SubscribeResponse(self.channel_id, False))
+		else:
+			return (True, SubscribeResponse(self.channel_id, True))
+
+	def handle_disconnect(self, connection): pass
+
 class EchoRequest(Event):
 	def __init__(self, message=None):
 		self.message = message
@@ -225,4 +237,4 @@ def smart_str(value, default=None):
 	if hasattr(value, '__unicode__'): return value.__unicode__()
 	return str(value)
 
-# Copyright 2010,2011,2012 Trevor F. Smith (http://trevor.smith.name/) Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+# Copyright 2013 Trevor F. Smith (http://trevor.smith.name/) Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
