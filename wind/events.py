@@ -14,7 +14,7 @@ class Channel(object):
 	You can create custom channels by extending Channel and then in the CreateChannelRequest use the class_name parameter to indicate which Channel class to use.
 	"""
 	def __init__(self, server, channel_id, name=None, options=None):
-		self.server = server
+		self.server = server # For Channels in CHANNEL, the server will set this to itself
 		self.channel_id = channel_id
 		self.name = name
 		self.options = options # channel specific information which the channel creator wants to link to the channel
@@ -200,6 +200,7 @@ def register_app_events():
 		for key in dir(events):
 			attribute = getattr(events, key)
 			if type(attribute) == types.TypeType and issubclass(attribute, Event) and attribute != Event:
+				# TODO: check that each parameter in __init__ has a default value
 				if attribute not in EVENTS: EVENTS.append(attribute)
 			if hasattr(events, 'CHANNELS'):
 				channels = getattr(events, 'CHANNELS')

@@ -25,7 +25,7 @@ Wind.Events.{{ event.event_name }} = function({% for attr in event.dict %}_{{ at
 	{% endfor %}
 	self.toJSON = function(){ return Wind.stringify(self); }
 }
-Wind.Events.{{ event.event_name }}.prototype.name = '{{ event.event_name }}';
+Wind.Events.{{ event.event_name }}.prototype.eventName = '{{ event.event_name }}';
 {% endfor %}
 
 Wind.Events.rehydrateEvent = function(jsonData){

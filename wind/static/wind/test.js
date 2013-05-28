@@ -36,7 +36,7 @@ function runWindTests(){
 		}
 		function aliceEventHandler(event){
 			switch(event.type){
-				case Wind.Events.ChannelCreated.prototype.name:
+				case Wind.Events.ChannelCreated.prototype.eventName:
 					ok(event.channel_id, 'Test channel created')
 					aliceWindClient.subscribe(testChannelId);
 					break;
@@ -116,7 +116,7 @@ function runWindTests(){
 		}
 		function appEventHandler(event){
 			switch(event.type){
-				case Wind.Events.EchoResponse.prototype.name:
+				case Wind.Events.EchoResponse.prototype.eventName:
 					ok(event, 'Received echo response');
 					if(event.message == echoMessage){
 						bobWindClient.sendEvent(new Wind.Events.EchoRequest(bobEchoMessage));
@@ -135,7 +135,7 @@ function runWindTests(){
 		}
 		function bobEventHandler(event){
 			switch(event.type){
-				case Wind.Events.EchoResponse.prototype.name:
+				case Wind.Events.EchoResponse.prototype.eventName:
 					ok(event, 'Received echo response');
 					ok(event.message == bobEchoMessage, 'Bob received appropriate echo: ' + echoMessage);
 					windClient.sendEvent(new Wind.Events.EchoRequest(terminalMessage));

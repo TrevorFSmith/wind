@@ -110,7 +110,7 @@ class WebSocketConnection:
 				print 'Attempted unauthed channel list request'
 			
 		elif isinstance(event, events.DeleteChannelRequest):
-			if self.user:
+			if self.user and self.user.is_staff:
 				# TODO fix this massive race condition
 				if self.server.channels.has_key(event.channel_id):
 					del(self.server.channels[event.channel_id])
@@ -119,10 +119,7 @@ class WebSocketConnection:
 				print 'Attempted unauthed channel list request'
 				
 		elif isinstance(event, events.SubscribeRequest):
-			if not self.user:
-				print 'Attemped unauthed subscribe'
-				response_event = events.SubscribeResponse(event.channel_id, False)
-			elif self.channel:
+			if self.channel:
 				print 'Attempted to subscribe to more than one channel'
 				response_event = events.SubscribeResponse(event.channel_id, False)
 			elif not self.server.channels.has_key(event.channel_id):
@@ -171,7 +168,9 @@ class WebsocketWSGIApp(object):
 		self.registration = None
 		self.channels = {} # map of channel_id to channel
 		events.register_app_events()
-		for channel in events.CHANNELS: self.channels[channel.channel_id] = channel
+		for channel in events.CHANNELS:
+			channel.server = self
+			self.channels[channel.channel_id] = channel
 
 		for registration in ServerRegistration.objects.all(): registration.delete()
 		self.registration, created = ServerRegistration.objects.get_or_create(ip=socket.gethostbyname(socket.gethostname()), port=port)
