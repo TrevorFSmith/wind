@@ -88,6 +88,7 @@ INSTALLED_APPS = (
 	'wind',
 	'examples.front',
 	'examples.echo',
+	'examples.chat',
 )
 
 LOGGING = {

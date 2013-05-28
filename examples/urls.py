@@ -9,5 +9,6 @@ urlpatterns = patterns('',
 
     url(r'^wind/', include('wind.urls')),
     url(r'^echo/', include('examples.echo.urls')),
+    url(r'^chat/', include('examples.chat.urls')),
 	url(r'^', include('examples.front.urls')),
 )

@@ -30,8 +30,9 @@
 			  <a class="brand" href="{% url 'front.views.index' %}">{{ site.name }}</a>
 			  <div class="nav-collapse">
 				<ul class="nav">
-					<li><a href="{% url 'echo.views.index' %}" class="echo-nav">Echo</a></li>
-					<li><a href="{% url 'wind.views.index' %}" class="wind-nav">Wind</a></li>
+					<li class="chat-nav"><a href="{% url 'chat.views.index' %}">Chat</a></li>
+					<li class="echo-nav"><a href="{% url 'echo.views.index' %}">Echo</a></li>
+					<li class="wind-nav"><a href="{% url 'wind.views.index' %}">Wind</a></li>
 					{% if request.user.is_staff %}
 						<li><a href="{% url 'admin:index' %}">Admin</a></li>
 					{% endif %}

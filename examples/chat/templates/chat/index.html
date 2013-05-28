@@ -1,0 +1,15 @@
+{% extends "chat/base.html" %}
+
+{% block script-extras-page %}
+<script src='{% url "wind.views.windjs" %}'></script>
+<script>
+	$(document).ready(function(){
+		$('.chat-nav').addClass('active');
+		window.pageView = new chat.views.PageView({
+			'el':$('#page-view'),
+			'sessionKey':'{{request.user.session_key}}',
+			'chatToken':'{{token}}'
+		});
+	});
+</script>
+{% endblock %}

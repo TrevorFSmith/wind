@@ -1,13 +1,21 @@
-var echo = echo || {};
-echo.views = echo.views || {};
+var chat = chat || {};
+chat.views = chat.views || {};
 
-echo.views.PageView = Backbone.View.extend({
+chat.GUEST_NAMES = ['Flower', 'Moon', 'Rouge', 'Manipedi', 'Printer', 'Payroll', 'Flipflop', 'Powder', 'Cheese']
+chat.CHANNEL_NAME = 'chatter';
+
+chat.randomGuestName = function(){
+	return chat.GUEST_NAMES[Math.floor((Math.random() * chat.GUEST_NAMES.length))];
+}
+
+chat.views.PageView = Backbone.View.extend({
 	className: 'page-view span12',
 	data: {},
 	windClient: null,
 
 	initialize: function(){
 		_.bindAll(this);
+		this.username = 'Guest ' + chat.randomGuestName() + ' ' + chat.randomGuestName() + ' ' + chat.randomGuestName();
 		this.messageDisplay = $.el.div({'class':'message-display'});
 		this.inputField = $.el.input();
 		this.sendButton = $.el.button('Send');
@@ -28,26 +36,10 @@ echo.views.PageView = Backbone.View.extend({
 		if(this.options.sessionKey){
 			this.windClient.authenticate();
 		} else {
-			this.windClient.subscribe('chatter');
+			this.windClient.subscribe(chat.CHANNEL_NAME);
 		}
 	},
-	onAuth: function(success){
-		if(!success){
-			this.$el.empty();
-			this.$el.append($.el.div('Could not auth, dang it.'));
-			this.windClient.close();
-			return;
-		}
-		this.windClient.subscribe('chatter');
-	},
-	onSubscribe: function(channel_id, joined, is_member, is_admin, is_editor){
-		if(!joined){
-			this.$el.empty();
-			this.$el.append($.el.div('Could not subscribe, dang it.'));
-			this.windClient.close();
-			return;
-		}
-
+	onTokenSet: function(){
 		this.$el.empty();
 		this.$el.append(this.inputField);
 		this.$el.append(this.sendButton);
@@ -57,6 +49,25 @@ echo.views.PageView = Backbone.View.extend({
 		$(this.inputField).change(this.sendMessage);
 		$(this.inputField).focus();
 	},
+	onAuth: function(success){
+		if(!success){
+			this.$el.empty();
+			this.$el.append($.el.div('Could not auth, dang it.'));
+			this.windClient.close();
+			return;
+		}
+		this.username = this.windClient.username;
+		this.windClient.subscribe(chat.CHANNEL_NAME);
+	},
+	onSubscribe: function(channel_id, joined, is_member, is_admin, is_editor){
+		if(!joined){
+			this.$el.empty();
+			this.$el.append($.el.div('Could not subscribe, dang it.'));
+			this.windClient.close();
+			return;
+		}
+		this.windClient.sendEvent(new Wind.Events.SetToken(this.options.chatToken));
+	},
 	onClose: function(){
 		console.log("Wind client closed");
 		this.$el.empty();
@@ -64,8 +75,11 @@ echo.views.PageView = Backbone.View.extend({
 	},
 	onEvent: function(event){
 		switch(event.type){
-			case Wind.Events.EchoResponse.prototype.eventName:
-				$(this.messageDisplay).prepend($.el.div(event.message));
+			case Wind.Events.SendChatter.prototype.eventName:
+				$(this.messageDisplay).prepend($.el.div($.el.span(event.username + ': '), event.message));
+				break;
+			case Wind.Events.TokenSet.prototype.eventName:
+				this.onTokenSet();
 				break;
 			default:
 				console.log("Unhandled message", event);
@@ -74,6 +88,6 @@ echo.views.PageView = Backbone.View.extend({
 	sendMessage: function(){
 		var message = $(this.inputField).val();
 		$(this.inputField).val('');
-		this.windClient.sendEvent(new Wind.Events.EchoRequest(message));
+		this.windClient.sendEvent(new Wind.Events.SendChatter(this.username, message));
 	}
 });
