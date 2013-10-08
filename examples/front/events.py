@@ -5,9 +5,6 @@ class ChatterChannel(Channel):
 		connection.chatter_token = None
 		return (True, SubscribeResponse(channel_id=self.channel_id, joined=True))
 
-	def handle_disconnect(self, connection):
-		print 'No longer chattering', connection.user
-
 class SetToken(Event):
 	'''Used to set which chatter stream the connection is for'''
 	def __init__(self, token=None):
