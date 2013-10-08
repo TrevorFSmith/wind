@@ -23,5 +23,5 @@ setup(
 		"License :: OSI Approved :: Apache 2.0",
 	],
 	scripts = [],
-	install_requires=['django','south','django-piston'],
+	install_requires=['django','south','django-piston', 'gevent-websocket'],
 )
